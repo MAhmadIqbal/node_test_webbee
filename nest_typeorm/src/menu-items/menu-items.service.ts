@@ -85,7 +85,17 @@ export class MenuItemsService {
         }
     ]
   */
-  async getMenuItems() {
-    throw new Error('TODO in task 3');
-  }
+    async getMenuItems(): Promise<MenuItem[]> {
+        const items = await this.menuItemRepository.find();
+        return this.buildTree(items, null);
+      }
+    
+      private buildTree(items: MenuItem[], parentId: number | null): MenuItem[] {
+        const children = items.filter(item => item.parentId === parentId);
+        return children.map(child => ({
+          ...child,
+          children: this.buildTree(items, child.id),
+        }));
+      }
+      
 }

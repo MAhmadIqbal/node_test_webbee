@@ -6,8 +6,7 @@ import { Event } from './entities/event.entity';
 @Injectable()
 export class EventsService {
   constructor(
-    @InjectRepository(Event)
-    private eventRepository: Repository<Event>,
+    @InjectRepository(Event) private eventRepository: Repository<Event>,
   ) {}
 
   getWarmupEvents() {
@@ -92,8 +91,8 @@ export class EventsService {
      */
 
   @Get('events')
-  async getEventsWithWorkshops() {
-    throw new Error('TODO task 1');
+  async getEventsWithWorkshops(): Promise<Event[]> {
+    return this.eventRepository.find({ relations: ['workshops'] });
   }
 
   /* TODO: complete getFutureEventWithWorkshops so that it returns events with workshops, that have not yet started
@@ -163,7 +162,14 @@ export class EventsService {
     ```
      */
   @Get('futureevents')
-  async getFutureEventWithWorkshops() {
-    throw new Error('TODO task 2');
+  async getFutureEventWithWorkshops(): Promise<Event[]> {
+    const events = await this.eventRepository
+      .createQueryBuilder('event')
+      .leftJoinAndSelect('event.workshops', 'workshop')
+      .groupBy('event.id')
+      .having('MIN(workshop.start) > NOW()')
+      .getMany();
+
+    return events;
   }
 }
